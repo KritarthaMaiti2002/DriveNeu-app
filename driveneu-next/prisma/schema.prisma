@@ -1,0 +1,180 @@
+// Prisma schema for Driveneu Driver App
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DRIVER
+  ADMIN
+}
+
+enum DriverStatus {
+  ONLINE
+  OFFLINE
+  ON_TRIP
+}
+
+enum BookingStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum TxnType {
+  CREDIT
+  DEBIT
+  PAYOUT
+  INCENTIVE
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  phone        String?       @unique
+  passwordHash String
+  name         String
+  role         Role          @default(DRIVER)
+  createdAt    DateTime      @default(now())
+  driver       DriverProfile?
+}
+
+model DriverProfile {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partnerId      String         @unique
+  tier           String         @default("Silver Partner")
+  status         DriverStatus   @default(OFFLINE)
+  rating         Float          @default(5.0)
+  streakDays     Int            @default(0)
+  vehicleNumber  String?
+  licenseNumber  String?
+  bookings       Booking[]
+  wallet         Wallet?
+  enrollments    Enrollment[]
+  tickets        Ticket[]
+  notifications  Notification[]
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  driverId    String
+  driver      DriverProfile @relation(fields: [driverId], references: [id])
+  passenger   String
+  pickup      String
+  dropoff     String
+  scheduledAt DateTime
+  fare        Float
+  distanceKm  Float
+  status      BookingStatus @default(SCHEDULED)
+  createdAt   DateTime      @default(now())
+  @@index([driverId, status, scheduledAt])
+}
+
+model Wallet {
+  id           String        @id @default(cuid())
+  driverId     String        @unique
+  driver       DriverProfile @relation(fields: [driverId], references: [id])
+  balance      Float         @default(0)
+  transactions Transaction[]
+  updatedAt    DateTime      @updatedAt
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  type        TxnType
+  amount      Float
+  description String
+  createdAt   DateTime @default(now())
+  @@index([walletId, createdAt])
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  category    String
+  modules     Module[]
+  enrollments Enrollment[]
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  order     Int
+  durationMin Int    @default(5)
+  progress  ModuleProgress[]
+}
+
+model Enrollment {
+  id           String         @id @default(cuid())
+  driverId     String
+  driver       DriverProfile  @relation(fields: [driverId], references: [id])
+  courseId     String
+  course       Course         @relation(fields: [courseId], references: [id])
+  startedAt    DateTime       @default(now())
+  completedAt  DateTime?
+  progress     ModuleProgress[]
+  @@unique([driverId, courseId])
+}
+
+model ModuleProgress {
+  id           String     @id @default(cuid())
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  moduleId     String
+  module       Module     @relation(fields: [moduleId], references: [id])
+  completed    Boolean    @default(false)
+  completedAt  DateTime?
+  @@unique([enrollmentId, moduleId])
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  category  String
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  @@index([category])
+}
+
+model Ticket {
+  id        String       @id @default(cuid())
+  driverId  String
+  driver    DriverProfile @relation(fields: [driverId], references: [id])
+  subject   String
+  body      String
+  category  String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    DriverProfile @relation(fields: [driverId], references: [id])
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@index([driverId, read])
+}
