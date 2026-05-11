@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { z } from "zod";
 import { withApi } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
@@ -21,7 +23,6 @@ export const POST = withApi({
       update: { completed: true, completedAt: new Date() },
       create: { enrollmentId: enr.id, moduleId: mod.id, completed: true, completedAt: new Date() },
     });
-    // recompute completion
     const total = await prisma.module.count({ where: { courseId: mod.courseId } });
     const done = await prisma.moduleProgress.count({ where: { enrollmentId: enr.id, completed: true } });
     if (done >= total) await prisma.enrollment.update({ where: { id: enr.id }, data: { completedAt: new Date() } });

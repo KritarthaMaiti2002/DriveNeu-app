@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { z } from "zod";
 import { withApi } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
