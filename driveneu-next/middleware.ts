@@ -4,9 +4,18 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/api/auth");
+
+  const isPublicRoute =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/register");
+
   const isApi = pathname.startsWith("/api");
-  if (isAuthRoute) return NextResponse.next();
+
+  if (isPublicRoute) return NextResponse.next();
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
