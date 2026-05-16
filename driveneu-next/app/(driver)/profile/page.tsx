@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Settings, ChevronRight, Star, TrendingUp, Shield, HelpCircle, LogOut, User, Phone, Mail, CreditCard } from "lucide-react";
-import { LogoutButton } from "./LogoutButton";
+import  LogoutButton  from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
 
