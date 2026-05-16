@@ -23,6 +23,11 @@ function LoginForm() {
       <h1 className="font-display text-2xl font-bold">Driver login</h1>
       <input className="w-full bg-muted rounded-lg px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" required />
       <input className="w-full bg-muted rounded-lg px-3 py-2" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" required />
+      <div style={{textAlign:"right", marginTop: -8}}>
+        <Link href="/forgot-password" style={{fontSize:13, color:"#D4A017", fontWeight:600, textDecoration:"none"}}>
+          Forgot password?
+        </Link>
+      </div>
       {err && <p className="text-red-400 text-sm">{err}</p>}
       <button className="w-full bg-primary text-primary-foreground rounded-lg py-2 font-semibold">Sign in</button>
       <p className="text-xs text-muted-foreground">Seeded demo: chandan@driveneu.test / driver123</p>

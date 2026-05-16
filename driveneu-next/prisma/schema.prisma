@@ -50,6 +50,7 @@ model User {
   role         Role          @default(DRIVER)
   createdAt    DateTime      @default(now())
   driver       DriverProfile?
+  resetToken PasswordResetToken?
 }
 
 model DriverProfile {
@@ -178,4 +179,11 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   @@index([driverId, read])
+}
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  userId  String   @unique
+  token   String   @unique
+  expires DateTime
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
