@@ -1,60 +1,52 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BarChart2, Bell, User, BookOpen } from "lucide-react";
 
-export function BottomNav() {
+interface BottomNavProps {
+  onMenuClick?: () => void;
+}
+
+const items = [
+  { href: "/dashboard", icon: "home", label: "Home" },
+  { href: "/bookings", icon: "calendar_month", label: "Bookings" },
+  { href: "/updates", icon: "notifications", label: "Updates" },
+  { href: "/lms", icon: "school", label: "Learning" },
+  { href: "/profile", icon: "account_circle", label: "Profile" },
+];
+
+export function BottomNav({ onMenuClick }: BottomNavProps) {
   const path = usePathname();
-  const items = [
-    { href: "/dashboard", icon: Home, label: "Home" },
-    { href: "/bookings", icon: BarChart2, label: "Bookings" },
-    { href: "/updates", icon: Bell, label: "Updates" },
-    { href: "/lms", icon: BookOpen, label: "Learning" },
-    { href: "/profile", icon: User, label: "Profile" },
-  ];
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50" style={{
-      background: "#fff",
-      borderTop: "1px solid #f0ede8",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.06)"
+    <nav style={{
+      position: "fixed", bottom: 0, left: 0, width: "100%", zIndex: 50,
+      background: "rgba(255,255,255,0.85)",
+      backdropFilter: "blur(24px)",
+      WebkitBackdropFilter: "blur(24px)",
+      boxShadow: "0 -8px 24px rgba(26,28,28,0.06)",
+      borderTop: "1px solid rgba(204,200,188,0.15)",
     }}>
-      <div className="mx-auto max-w-md grid grid-cols-5 px-1 py-2">
-        {items.map((it) => {
-          const active = path === it.href;
+      <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "8px 16px 12px", maxWidth: 480, margin: "0 auto" }}>
+        {items.map((item) => {
+          const active = path === item.href || path.startsWith(item.href);
           return (
-            <Link
-              key={it.href}
-              href={it.href}
-              className="flex flex-col items-center gap-1 py-1.5"
-              style={{ textDecoration: "none" }}
-            >
-              <div style={{
-                width: 44,
-                height: 32,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 16,
-                background: active ? "#FFF3CD" : "transparent",
+            <Link key={item.href} href={item.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "6px 12px", borderRadius: 12, background: active ? "rgba(251,192,45,0.15)" : "transparent", transition: "all 0.2s" }}>
+              <span className="material-symbols-outlined" style={{
+                color: active ? "#fbc02d" : "#9ca3af",
+                fontSize: 24,
+                fontVariationSettings: active ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 300",
               }}>
-                <it.icon
-                  style={{
-                    width: 20,
-                    height: 20,
-                    color: active ? "#D4A017" : "#9ca3af",
-                    strokeWidth: active ? 2.5 : 1.8,
-                  }}
-                />
-              </div>
+                {item.icon}
+              </span>
               <span style={{
+                fontFamily: "'Inter', sans-serif",
                 fontSize: 10,
-                fontWeight: active ? 600 : 400,
-                color: active ? "#D4A017" : "#9ca3af",
-                letterSpacing: "0.02em",
+                fontWeight: active ? 700 : 500,
                 textTransform: "uppercase",
+                letterSpacing: "0.05rem",
+                color: active ? "#fbc02d" : "#9ca3af",
               }}>
-                {it.label}
+                {item.label}
               </span>
             </Link>
           );

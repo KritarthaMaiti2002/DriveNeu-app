@@ -27,7 +27,7 @@ export function DriverLayoutClient({ children, driverName, partnerId, tier }: Dr
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px", paddingBottom: 96, paddingTop: 16 }}>
         {children}
       </div>
-      <BottomNav onMenuClick={() => setSideNavOpen(true)} />
+      <BottomNav />
     </>
   );
 }
