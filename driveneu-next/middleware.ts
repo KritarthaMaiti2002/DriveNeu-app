@@ -10,8 +10,15 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/register") ||
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/otp-verification") ||
+    pathname.startsWith("/work-selection") ||
+    pathname.startsWith("/vehicle-selection") ||
+    pathname.startsWith("/driving-experience") ||
+    pathname.startsWith("/registration-fee") ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/register");
+    pathname.startsWith("/api/register") ||
+    pathname.startsWith("/api/auth/forgot-password") ||
+    pathname.startsWith("/api/auth/reset-password");
 
   const isApi = pathname.startsWith("/api");
 
