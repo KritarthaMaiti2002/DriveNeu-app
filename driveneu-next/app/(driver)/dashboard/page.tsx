@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Bell, ChevronRight, TrendingUp, AlertTriangle, Calendar, BookOpen, HelpCircle, User } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -22,173 +21,167 @@ export default async function DashboardPage() {
     where: { driverId: driver.id, scheduledAt: { gte: todayStart }, status: "COMPLETED" },
   });
   const todayEarnings = todayBookings.reduce((s, b) => s + b.fare, 0);
-  const upcoming = await prisma.booking.findMany({
+  const upcoming = await prisma.booking.findFirst({
     where: { driverId: driver.id, status: "SCHEDULED", scheduledAt: { gte: new Date() } },
     orderBy: { scheduledAt: "asc" },
-    take: 2,
   });
   const unread = await prisma.notification.count({ where: { driverId: driver.id, read: false } });
   const balance = driver.wallet?.balance ?? 0;
-  const firstName = driver.user.name.split(" ")[0];
-
-  const quickLinks = [
-    { href: "/bookings", icon: Calendar, label: "Bookings", color: "#FFF3CD", iconColor: "#D4A017" },
-    { href: "/updates", icon: Bell, label: "Updates", color: "#FEF3F2", iconColor: "#E74C3C", badge: unread > 0 ? unread : null },
-    { href: "/lms", icon: BookOpen, label: "Learning", color: "#F0FDF4", iconColor: "#22C55E" },
-    { href: "/help", icon: HelpCircle, label: "Help", color: "#EFF6FF", iconColor: "#3B82F6" },
-    { href: "/profile", icon: User, label: "Profile", color: "#FDF4FF", iconColor: "#A855F7" },
-  ];
+  const initials = driver.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-        <div>
-          <p style={{ fontSize: 13, color: "#9ca3af", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
-            {driver.partnerId} · {driver.tier}
-          </p>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
-            Welcome, {firstName} 👋
-          </h1>
-        </div>
-        <Link href="/updates" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: "50%", background: "#fff", border: "1px solid #f0ede8", textDecoration: "none" }}>
-          <Bell style={{ width: 20, height: 20, color: "#374151" }} />
-          {unread > 0 && (
-            <span style={{ position: "absolute", top: 6, right: 6, width: 8, height: 8, borderRadius: "50%", background: "#EF4444" }} />
-          )}
-        </Link>
-      </div>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: "#f9f9f9", minHeight: "100dvh" }}>
 
-      {/* Status badge */}
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#f9fafb", border: "1px solid #f0ede8", borderRadius: 20, padding: "6px 14px", marginBottom: 20 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: driver.status === "ONLINE" ? "#22C55E" : "#9ca3af", display: "inline-block" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>{driver.status}</span>
-      </div>
-
-      {/* Wallet card */}
-      <div style={{
-        background: "linear-gradient(135deg, #F5A623 0%, #E8941A 100%)",
-        borderRadius: 20,
-        padding: "24px 20px",
-        marginBottom: 16,
-        position: "relative",
-        overflow: "hidden",
+      {/* TopAppBar */}
+      <header style={{
+        position: "fixed", top: 0, width: "100%", zIndex: 50,
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "0 24px", height: 64,
+        background: "rgba(249,249,249,0.9)",
+        backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
       }}>
-        <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
-        <div style={{ position: "absolute", bottom: -30, right: 20, width: 80, height: 80, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-        <p style={{ fontSize: 12, fontWeight: 600, color: "rgba(0,0,0,0.6)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-          Total Wallet Balance
-        </p>
-        <h2 style={{ fontSize: 40, fontWeight: 800, color: "#1a1a1a", marginBottom: 20, lineHeight: 1 }}>
-          ₹{balance.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div style={{ background: "rgba(255,255,255,0.4)", borderRadius: 12, padding: "12px 14px" }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(0,0,0,0.5)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Streak</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a" }}>{driver.streakDays}d</p>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.4)", borderRadius: 12, padding: "12px 14px" }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "rgba(0,0,0,0.5)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>Rating</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a" }}>{driver.rating.toFixed(2)}</p>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button style={{ width: 40, height: 40, borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span className="material-symbols-outlined" style={{ color: "#fbc02d" }}>menu</span>
+          </button>
+          <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 800, fontSize: 20, color: "#fbc02d" }}>Navigator</span>
         </div>
-      </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, background: "#eeeeee", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05rem", color: "#4a473d" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: driver.status === "ONLINE" ? "#22C55E" : "#9ca3af", display: "inline-block" }} />
+            {driver.status === "ONLINE" ? "On Duty" : "Off Duty"}
+          </div>
+          <button style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, color: "#fbc02d" }}>
+            EN <span className="material-symbols-outlined" style={{ fontSize: 14 }}>language</span>
+          </button>
+        </div>
+      </header>
 
-      {/* Today stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
-        <div style={{ background: "#fff", borderRadius: 16, padding: "16px", border: "1px solid #f0ede8" }}>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Today's Earnings</p>
-          <p style={{ fontSize: 26, fontWeight: 800, color: "#D4A017" }}>₹{todayEarnings.toLocaleString("en-IN")}</p>
-          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>{todayBookings.length} trips</p>
-        </div>
-        <div style={{ background: "#fff", borderRadius: 16, padding: "16px", border: "1px solid #f0ede8" }}>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Upcoming</p>
-          <p style={{ fontSize: 26, fontWeight: 800, color: "#111827" }}>{upcoming.length}</p>
-          <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-            {upcoming[0] ? `Next: ${new Date(upcoming[0].scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : "None"}
-          </p>
-        </div>
-      </div>
+      <main style={{ paddingTop: 80, paddingBottom: 160, paddingLeft: 16, paddingRight: 16, maxWidth: 480, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* Low balance warning */}
-      {balance < 200 && (
-        <div style={{ background: "#FFF5F5", border: "1px solid #FED7D7", borderRadius: 16, padding: "14px 16px", marginBottom: 24, display: "flex", gap: 12, alignItems: "flex-start" }}>
-          <AlertTriangle style={{ width: 20, height: 20, color: "#E53E3E", flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#C53030" }}>Maintain Minimum Balance</p>
-            <p style={{ fontSize: 13, color: "#E53E3E", marginTop: 2 }}>Ensure a minimum wallet balance of ₹200 to continue receiving high-priority premium bookings.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming bookings */}
-      {upcoming.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>Upcoming</h3>
-            <Link href="/bookings" style={{ fontSize: 13, fontWeight: 600, color: "#D4A017", textDecoration: "none" }}>View All</Link>
-          </div>
-          {upcoming.map((b) => (
-            <div key={b.id} style={{ background: "#fff", borderRadius: 16, padding: "16px", border: "1px solid #f0ede8", marginBottom: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#FFF3CD", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Calendar style={{ width: 16, height: 16, color: "#D4A017" }} />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{b.passenger}</p>
-                    <p style={{ fontSize: 12, color: "#9ca3af" }}>{new Date(b.scheduledAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
-                  </div>
-                </div>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#D4A017" }}>₹{b.fare.toLocaleString("en-IN")}</p>
+        {/* ID Card Section */}
+        <Link href="/profile" style={{ textDecoration: "none" }}>
+          <section style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 8px 24px rgba(26,28,28,0.04)", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#fbc02d", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 900, fontSize: 18, color: "#1a1a1a" }}>{initials}</span>
               </div>
-              <div style={{ fontSize: 12, color: "#6b7280" }}>
-                <p>📍 {b.pickup}</p>
-                <p style={{ marginTop: 4 }}>🏁 {b.dropoff}</p>
+              <div>
+                <h2 style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15, color: "#1a1c1c", marginBottom: 2 }}>Show DriveNeu ID</h2>
+                <p style={{ fontSize: 12, color: "#4a473d" }}>{driver.user.name} • {driver.tier}</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Quick links */}
-      <div style={{ marginBottom: 32 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 14 }}>Quick Access</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
-              <div style={{ background: "#fff", borderRadius: 16, padding: "16px 12px", border: "1px solid #f0ede8", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative" }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: link.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <link.icon style={{ width: 20, height: 20, color: link.iconColor }} />
-                </div>
-                {link.badge && (
-                  <span style={{ position: "absolute", top: 10, right: 10, background: "#EF4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {link.badge}
-                  </span>
-                )}
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", textAlign: "center" }}>{link.label}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Check in button */}
-      <Link href="/bookings" style={{ textDecoration: "none", display: "block", marginBottom: 8 }}>
-        <div style={{ background: "#F5A623", borderRadius: 16, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a", letterSpacing: "0.04em" }}>CHECK IN</span>
-          <ChevronRight style={{ width: 20, height: 20, color: "#1a1a1a" }} />
-        </div>
-      </Link>
-
-      {/* Earn more promo */}
-      <div style={{ background: "#1a1a2e", borderRadius: 20, padding: "20px", marginTop: 16, marginBottom: 8 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#F5A623", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>PRO TIP</p>
-        <h4 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Earn more with Add-On Services</h4>
-        <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 14 }}>Provide car cleaning & basic maintenance to increase your payout per trip.</p>
-        <Link href="/lms" style={{ display: "inline-block", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#fff", textDecoration: "none" }}>
-          Learn More
+            <span className="material-symbols-outlined" style={{ color: "#7a776d" }}>chevron_right</span>
+          </section>
         </Link>
+
+        {/* Stats Bento Grid */}
+        <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {/* Wallet Balance - Full Width */}
+          <div style={{ gridColumn: "span 2", background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 8px 24px rgba(26,28,28,0.04)", display: "flex", flexDirection: "column", justifyContent: "space-between", height: 128, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", right: -16, top: -16, width: 96, height: 96, background: "rgba(251,192,45,0.1)", borderRadius: "50%", filter: "blur(32px)" }} />
+            <div>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05rem", fontWeight: 700, color: "#9ca3af" }}>Wallet balance</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 4 }}>
+                <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 30, fontWeight: 800, color: "#1a1c1c" }}>₹{balance.toLocaleString("en-IN")}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fbc02d" }}>Available</span>
+              </div>
+            </div>
+            <Link href="/wallet" style={{ fontSize: 14, fontWeight: 700, color: "#fbc02d", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+              Go to Wallet <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
+            </Link>
+          </div>
+
+          {/* Today's Bookings */}
+          <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 8px 24px rgba(26,28,28,0.04)", display: "flex", flexDirection: "column", gap: 8 }}>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05rem", fontWeight: 700, color: "#9ca3af" }}>Todays Bookings</span>
+            <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 28, fontWeight: 800, color: "#1a1c1c" }}>{String(todayBookings.length).padStart(2, "0")}</span>
+            <div style={{ marginTop: "auto", paddingTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#4a473d" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>schedule</span>
+              {upcoming ? `Next: ${new Date(upcoming.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : "No upcoming"}
+            </div>
+          </div>
+
+          {/* Today's Earnings */}
+          <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 8px 24px rgba(26,28,28,0.04)", display: "flex", flexDirection: "column", gap: 8, borderLeft: "4px solid #fbc02d" }}>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05rem", fontWeight: 700, color: "#9ca3af" }}>Todays Earning</span>
+            <span style={{ fontFamily: "'Manrope', sans-serif", fontSize: 28, fontWeight: 800, color: "#1a1c1c" }}>₹{todayEarnings.toLocaleString("en-IN")}</span>
+            <div style={{ marginTop: "auto", paddingTop: 8, display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#534600", fontWeight: 700 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>trending_up</span>
+              +{driver.streakDays} day streak
+            </div>
+          </div>
+        </section>
+
+        {/* Earn More Banner */}
+        <section style={{ position: "relative", background: "#1a1c1c", borderRadius: 12, overflow: "hidden", minHeight: 160, display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 24 }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)" }} />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <h3 style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 18, color: "#fff", lineHeight: 1.3, marginBottom: 4 }}>Earn more with Add-On Services</h3>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 16 }}>Provide car cleaning & basic maintenance to increase your payout per trip.</p>
+            <Link href="/lms" style={{ display: "inline-block", background: "#fbc02d", color: "#1a1a1a", padding: "6px 16px", borderRadius: 999, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+              Learn More
+            </Link>
+          </div>
+        </section>
+
+        {/* Alert Card */}
+        {balance < 200 && (
+          <section style={{ background: "rgba(160,61,68,0.08)", borderRadius: 12, padding: 16, display: "flex", gap: 16, alignItems: "flex-start", border: "1px solid rgba(160,61,68,0.15)" }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(160,61,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ color: "#a03d44" }}>warning</span>
+            </div>
+            <div>
+              <h4 style={{ fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 14, color: "#1a1c1c", marginBottom: 4 }}>Maintain Minimum Balance</h4>
+              <p style={{ fontSize: 12, color: "#4a473d", lineHeight: 1.6 }}>Ensure a minimum wallet balance of ₹200 to continue receiving high-priority premium bookings.</p>
+            </div>
+          </section>
+        )}
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav style={{
+        position: "fixed", bottom: 0, left: 0, width: "100%", zIndex: 50,
+        display: "flex", justifyContent: "space-around", alignItems: "center",
+        padding: "8px 16px 12px", height: 80,
+        background: "rgba(255,255,255,0.85)",
+        backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+        boxShadow: "0 -8px 24px rgba(26,28,28,0.06)",
+        borderTop: "1px solid rgba(204,200,188,0.15)",
+      }}>
+        {[
+          { href: "/dashboard", icon: "home", label: "Home", active: true },
+          { href: "/wallet", icon: "account_balance_wallet", label: "Wallet", active: false },
+          { href: "/bookings", icon: "calendar_month", label: "Bookings", active: false },
+          { href: "/profile", icon: "person", label: "Account", active: false },
+        ].map((item) => (
+          <Link key={item.href} href={item.href} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "6px 12px", borderRadius: 12, background: item.active ? "rgba(251,192,45,0.15)" : "transparent" }}>
+            <span className="material-symbols-outlined" style={{ color: item.active ? "#fbc02d" : "#9ca3af", fontSize: 24, fontVariationSettings: item.active ? "'FILL' 1" : "'FILL' 0" }}>{item.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: item.active ? 700 : 500, textTransform: "uppercase", letterSpacing: "0.05rem", color: item.active ? "#fbc02d" : "#9ca3af" }}>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      {/* CHECK IN FAB */}
+      <div style={{ position: "fixed", bottom: 88, left: 0, right: 0, padding: "0 24px", zIndex: 40 }}>
+        <button style={{
+          width: "100%", height: 56,
+          background: "linear-gradient(135deg, #fbc02d, #fcc934)",
+          color: "#1a1a1a", border: "none", borderRadius: 999,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 32px",
+          boxShadow: "0 8px 24px rgba(252,201,52,0.3)",
+          cursor: "pointer",
+          fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: 15,
+          letterSpacing: "0.1rem", textTransform: "uppercase",
+        }}>
+          CHECK IN
+          <div style={{ display: "flex", gap: 2 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, opacity: 0.4 }}>chevron_right</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, opacity: 0.7 }}>chevron_right</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>chevron_right</span>
+          </div>
+        </button>
       </div>
     </div>
   );
